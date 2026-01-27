@@ -17,8 +17,8 @@ template <std::floating_point T = double>
 class Vector3
 {
 public:
-    Vector3() : m_e{0.0, 0.0, 0.0} {}
-    Vector3(T e0, T e1, T e2) : m_e{e0, e1, e2} {}
+    constexpr Vector3() : m_e{0.0, 0.0, 0.0} {}
+    constexpr Vector3(T e0, T e1, T e2) : m_e{e0, e1, e2} {}
 
     constexpr T x() const { return m_e[0]; }
     constexpr T y() const { return m_e[1]; }
