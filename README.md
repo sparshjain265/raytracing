@@ -8,6 +8,6 @@ We support two configs, Debug and Release, defaulting to Debug if unspecified.
 
 ```bash
 $ cmake -B build/<config> -DCMAKE_BUILD_TYPE=<config>
-$ make -C build/<config>
+$ cmake --build build/<config>
 $ ./bin/<config>/RayTracerInOneWeekend
 ```
