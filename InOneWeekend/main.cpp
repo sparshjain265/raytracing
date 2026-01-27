@@ -12,8 +12,27 @@
 #include "ray.hpp"
 
 template <std::floating_point T = double>
+constexpr bool hitSphere(
+    const Point3<T> &center,
+    T radius,
+    const Ray<T> &r)
+{
+    const auto o = center - r.origin();
+    const auto a = dot(r.direction(), r.direction());
+    const auto b = -2.0 * dot(r.direction(), o);
+    const auto c = dot(o, o) - radius * radius;
+    const auto discriminant = b * b - 4 * a * c;
+    return (discriminant >= 0);
+}
+
+template <std::floating_point T = double>
 constexpr Color<T> rayColor(const Ray<T> &r)
 {
+    if (hitSphere(Point3<T>(0.0, 0.0, -1.0), 0.5, r))
+    {
+        return Color<T>(1.0, 0.0, 0.0); // Red for sphere hit
+    }
+
     const auto unitDirection = unitVector(r.direction());
     const T t = static_cast<T>(0.5) * (unitDirection.y() + static_cast<T>(1.0));
 
