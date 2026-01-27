@@ -138,7 +138,7 @@ inline constexpr Vector3<T> operator/(double t, const Vector3<T> &v)
 }
 
 template <std::floating_point T>
-inline constexpr double dot(const Vector3<T> &u, const Vector3<T> &v)
+inline constexpr T dot(const Vector3<T> &u, const Vector3<T> &v)
 {
     return u.x() * v.x() + u.y() * v.y() + u.z() * v.z();
 }

@@ -12,34 +12,47 @@
 #include "ray.hpp"
 
 template <std::floating_point T = double>
-constexpr bool hitSphere(
+constexpr T hitSphere(
     const Point3<T> &center,
     T radius,
     const Ray<T> &r)
 {
-    const auto o = center - r.origin();
+    const auto oc = center - r.origin();
     const auto a = dot(r.direction(), r.direction());
-    const auto b = -2.0 * dot(r.direction(), o);
-    const auto c = dot(o, o) - radius * radius;
-    const auto discriminant = b * b - 4 * a * c;
-    return (discriminant >= 0);
+    const auto h = dot(r.direction(), oc);
+    const auto c = dot(oc, oc) - radius * radius;
+    const auto discriminant = h * h - a * c;
+
+    if (discriminant < 0)
+    {
+        return static_cast<T>(-1.0);
+    }
+    else
+    {
+        return (h - std::sqrt(discriminant)) / a;
+    }
 }
 
 template <std::floating_point T = double>
 constexpr Color<T> rayColor(const Ray<T> &r)
 {
-    if (hitSphere(Point3<T>(0.0, 0.0, -1.0), 0.5, r))
+    constexpr auto center = Point3<T>(0.0, 0.0, -1.0);
+    constexpr auto radius = static_cast<T>(0.5);
+    const auto t = hitSphere(center, radius, r);
+    if (t > 0)
     {
-        return Color<T>(1.0, 0.0, 0.0); // Red for sphere hit
+        const auto N = unitVector(r.at(t) - center);
+        constexpr auto ones = Color<T>(1.0, 1.0, 1.0);
+        return static_cast<T>(0.5) * (ones + N);
     }
 
     const auto unitDirection = unitVector(r.direction());
-    const T t = static_cast<T>(0.5) * (unitDirection.y() + static_cast<T>(1.0));
+    const T a = static_cast<T>(0.5) * (unitDirection.y() + static_cast<T>(1.0));
 
     constexpr auto white = Color<T>(1.0, 1.0, 1.0);
     constexpr auto blue = Color<T>(0.5, 0.7, 1.0);
 
-    return (1 - t) * white + t * blue;
+    return (1 - a) * white + a * blue;
 }
 
 int main()
