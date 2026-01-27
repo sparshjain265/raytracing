@@ -23,6 +23,7 @@ endif()
 # Source Files
 set(SOURCE_ONE_WEEKEND
     InOneWeekend/main.cpp
+    InOneWeekend/src/vector3.cpp
 )
 
 # Include Directories
@@ -30,6 +31,9 @@ include_directories(include)
 
 # Add Executables
 add_executable(RayTracerInOneWeekend ${SOURCE_ONE_WEEKEND})
+
+# Include Directories for Target
+target_include_directories(RayTracerInOneWeekend PRIVATE InOneWeekend/include)
 
 # Compile Options
 set(COMMON_CXX_FLAGS -fdiagnostics-color=always -pedantic-errors -Wall -Wextra -Werror -Weffc++ -Wconversion -Wsign-conversion)

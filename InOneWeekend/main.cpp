@@ -20,6 +20,7 @@ int main()
 
     for (int i = 0; i < height; ++i)
     {
+        std::clog << "\rScanlines remaining: " << height - i << ' ' << std::flush;
         for (int j = 0; j < width; ++j)
         {
             auto r = static_cast<double>(j) / (width - 1);
@@ -33,6 +34,8 @@ int main()
             std::cout << ir << ' ' << ig << ' ' << ib << '\n';
         }
     }
+
+    std::clog << "\rDone.                                              \n";
 
     return 0;
 }
