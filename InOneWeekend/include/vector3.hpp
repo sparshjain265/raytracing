@@ -5,8 +5,8 @@
  *
  */
 
-#ifndef INONEWEEKEND_INCLUDE_VEC3_HPP
-#define INONEWEEKEND_INCLUDE_VEC3_HPP
+#ifndef INONEWEEKEND_INCLUDE_VECTOR3_HPP
+#define INONEWEEKEND_INCLUDE_VECTOR3_HPP
 
 #include <cmath>
 #include <iostream>
@@ -157,4 +157,4 @@ inline constexpr Vector3<T> unitVector(const Vector3<T> &v)
     return v / v.norm();
 }
 
-#endif /* INONEWEEKEND_INCLUDE_VEC3_HPP */
+#endif /* INONEWEEKEND_INCLUDE_VECTOR3_HPP */

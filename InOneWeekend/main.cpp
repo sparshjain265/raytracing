@@ -6,6 +6,8 @@
  */
 
 #include <iostream>
+#include "color.hpp"
+#include "vector3.hpp"
 
 int main()
 {
@@ -23,15 +25,12 @@ int main()
         std::clog << "\rScanlines remaining: " << height - i << ' ' << std::flush;
         for (int j = 0; j < width; ++j)
         {
-            auto r = static_cast<double>(j) / (width - 1);
-            auto g = static_cast<double>(i) / (height - 1);
-            auto b = static_cast<double>(0.0);
+            auto pixelColor = Color<double>(
+                static_cast<double>(j) / (width - 1),
+                static_cast<double>(i) / (height - 1),
+                0.0);
 
-            auto ir = static_cast<int>(255.999 * r);
-            auto ig = static_cast<int>(255.999 * g);
-            auto ib = static_cast<int>(255.999 * b);
-
-            std::cout << ir << ' ' << ig << ' ' << ib << '\n';
+            writeColor(std::cout, pixelColor);
         }
     }
 

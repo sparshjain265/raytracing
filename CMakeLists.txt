@@ -24,6 +24,7 @@ endif()
 set(SOURCE_ONE_WEEKEND
     InOneWeekend/main.cpp
     InOneWeekend/src/vector3.cpp
+    InOneWeekend/src/color.cpp
 )
 
 # Include Directories
