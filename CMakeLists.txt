@@ -30,6 +30,7 @@ set(SOURCE_ONE_WEEKEND
     InOneWeekend/src/hittable_list.cpp
     InOneWeekend/src/sphere.cpp
     InOneWeekend/src/interval.cpp
+    InOneWeekend/src/camera.cpp
 )
 
 # Include Directories
