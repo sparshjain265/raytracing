@@ -63,7 +63,7 @@ template <std::floating_point T = double>
 class Metal : public Material<T>
 {
 public:
-    constexpr Metal(const Color<T> &albedo) : m_albedo(albedo) {}
+    constexpr Metal(const Color<T> &albedo, T fuzz) : m_albedo(albedo), m_fuzz(fuzz < 1 ? fuzz : 1) {}
 
     virtual ~Metal() override = default;
 
@@ -73,14 +73,16 @@ public:
         Color<T> &attenuation,
         Ray<T> &scattered) const override
     {
-        const auto reflected = reflect(unitVector(rIn.direction()), record.normal());
+        auto reflected = reflect(unitVector(rIn.direction()), record.normal());
+        reflected += unitVector<T>(reflected) + (m_fuzz * randomUnitVector<T>());
         scattered = Ray<T>(record.point(), reflected);
         attenuation = m_albedo;
-        return true;
+        return (dot(scattered.direction(), record.normal()) > 0);
     }
 
 private:
     Color<T> m_albedo;
+    T m_fuzz;
 };
 
 #endif /* INONEWEEKEND_INCLUDE_MATERIAL_HPP */
