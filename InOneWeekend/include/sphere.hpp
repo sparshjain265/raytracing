@@ -9,21 +9,21 @@
 #define INONEWEEKEND_INCLUDE_SPHERE_HPP
 
 #include <concepts>
+#include <memory>
 
 #include "hittable.hpp"
 #include "vector3.hpp"
 #include "interval.hpp"
+#include "material_forward_decl.hpp"
 
 template <std::floating_point T = double>
 class Sphere : public Hittable<T>
 {
 public:
-    constexpr Sphere() : Sphere(Point3<T>(), static_cast<T>(1.0)) {}
+    constexpr Sphere(const Point3<T> &center, T radius, std::shared_ptr<Material<T>> material)
+        : m_center(center), m_radius(radius), m_material(material) {}
 
-    constexpr Sphere(const Point3<T> &center, T radius)
-        : m_center(center), m_radius(radius) {}
-
-    virtual ~Sphere() = default;
+    virtual ~Sphere() override = default;
 
     constexpr const Point3<T> &center() const { return m_center; }
     constexpr T radius() const { return m_radius; }
@@ -34,9 +34,9 @@ public:
         HitRecord<T> &record) const override
     {
         const auto oc = m_center - r.origin();
-        const auto a = r.direction().squared_norm();
+        const auto a = r.direction().squaredNorm();
         const auto h = dot(r.direction(), oc);
-        const auto c = oc.squared_norm() - m_radius * m_radius;
+        const auto c = oc.squaredNorm() - m_radius * m_radius;
         const auto discriminant = h * h - a * c;
 
         if (discriminant < 0)
@@ -61,6 +61,7 @@ public:
         record.setPoint(r.at(root));
         const auto outwardNormal = (record.point() - m_center) / m_radius;
         record.setNormal(r, outwardNormal);
+        record.setMaterial(m_material);
 
         return true;
     }
@@ -68,6 +69,7 @@ public:
 private:
     Point3<T> m_center;
     T m_radius;
+    std::shared_ptr<Material<T>> m_material;
 };
 
 #endif /* INONEWEEKEND_INCLUDE_SPHERE_HPP */

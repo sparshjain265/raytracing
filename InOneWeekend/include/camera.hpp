@@ -153,14 +153,21 @@ private:
 
         HitRecord<T> record;
 
-        if (world.hit(r, Interval<T>(static_cast<T>(std::numeric_limits<T>::epsilon()), infinity<T>), record))
+        constexpr T eps = static_cast<T>(0.001);
+
+        if (world.hit(r, Interval<T>(eps, infinity<T>), record))
         {
-            const auto direction = record.normal() + randomUnitVector<T>();
-            const auto newRay = Ray<T>(record.point(), direction);
-            return static_cast<T>(0.5) * rayColor(newRay, world, reflectionCount + 1);
-            // const auto N = record.normal();
-            // constexpr auto ones = Color<T>(1.0, 1.0, 1.0);
-            // return static_cast<T>(0.5) * (ones + N);
+            Ray<T> scattered;
+            Color<T> attenuation;
+
+            if (record.material() && record.material()->scatter(r, record, attenuation, scattered))
+            {
+                return attenuation * rayColor(scattered, world, reflectionCount + 1);
+            }
+            else
+            {
+                return black;
+            }
         }
 
         const auto unitDirection = unitVector(r.direction());

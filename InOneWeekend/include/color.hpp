@@ -67,7 +67,7 @@ inline void writeColor(std::ostream &out, const Color<T> &pixelColor)
 
     // Translate the [0, 1] color values to [0,255]
     constexpr T zero = static_cast<T>(0.0);
-    constexpr T almostOne = static_cast<T>(1 - std::numeric_limits<T>::epsilon());
+    constexpr T almostOne = static_cast<T>(0.999);
     constexpr Interval<T> intensity(zero, almostOne);
 
     // Write the translated [0,255] value of each color component

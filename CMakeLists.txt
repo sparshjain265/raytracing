@@ -32,6 +32,7 @@ set(SOURCE_ONE_WEEKEND
     InOneWeekend/src/interval.cpp
     InOneWeekend/src/camera.cpp
     InOneWeekend/src/util.cpp
+    InOneWeekend/src/material.cpp
 )
 
 # Include Directories

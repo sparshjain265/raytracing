@@ -58,10 +58,10 @@ public:
 
     constexpr T norm() const
     {
-        return std::sqrt(squared_norm());
+        return std::sqrt(squaredNorm());
     }
 
-    constexpr T squared_norm() const
+    constexpr T squaredNorm() const
     {
         return m_e[0] * m_e[0] + m_e[1] * m_e[1] + m_e[2] * m_e[2];
     }
@@ -71,9 +71,9 @@ public:
         return norm();
     }
 
-    constexpr T squared_length() const
+    constexpr T squaredLength() const
     {
-        return squared_norm();
+        return squaredNorm();
     }
 
     static constexpr Vector3 random()
@@ -84,6 +84,13 @@ public:
     static constexpr Vector3 random(T min, T max)
     {
         return Vector3(Util::random<T>(min, max), Util::random<T>(min, max), Util::random<T>(min, max));
+    }
+
+    constexpr bool nearZero() const
+    {
+        // Return true if the vector is close to zero in all dimensions
+        constexpr T eps = static_cast<T>(1e-8);
+        return (std::fabs(m_e[0]) < eps) && (std::fabs(m_e[1]) < eps) && (std::fabs(m_e[2]) < eps);
     }
 
 private:
@@ -176,8 +183,23 @@ inline Vector3<T> randomUnitVector()
     while (true)
     {
         const auto p = Vector3<T>::random(-1.0, 1.0);
-        const T norm = p.squared_norm();
-        constexpr T threshold = 1e-30;
+        const T norm = p.squaredNorm();
+
+        // Use constexpr lambda trick to evaluate threshold at compile-time
+        // Threshold depends on the precision of T
+        // Threshold is 1e-160 for double or more precision and 1e-30 for single precision floats
+        constexpr T threshold = []
+        {
+            if constexpr (std::numeric_limits<T>::digits >= std::numeric_limits<double>::digits)
+            {
+                return static_cast<T>(1e-160);
+            }
+            else
+            {
+                return static_cast<T>(1e-30);
+            }
+        }();
+
         if (threshold < norm && norm <= 1.0)
         {
             return p / std::sqrt(norm);
@@ -193,6 +215,12 @@ inline Vector3<T> randomUnitVectorOnHemisphere(const Vector3<T> &normal)
         return unit_vector;
     else
         return -unit_vector;
+}
+
+template <std::floating_point T>
+inline Vector3<T> reflect(const Vector3<T> &v, const Vector3<T> &n)
+{
+    return v - 2 * dot(v, n) * n;
 }
 
 #endif /* INONEWEEKEND_INCLUDE_VECTOR3_HPP */
