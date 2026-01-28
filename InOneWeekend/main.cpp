@@ -32,6 +32,7 @@ int main()
     Camera<T> camera;
     camera.setAspectRatio(16.0 / 9.0);
     camera.setImageWidth(400);
+    camera.setNumSamplesPerPixel(100);
 
     camera.render(world);
 

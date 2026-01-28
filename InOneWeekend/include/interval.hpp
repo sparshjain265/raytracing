@@ -39,6 +39,22 @@ public:
         return (value > m_min) && (value < m_max);
     }
 
+    constexpr T clamp(const T value) const
+    {
+        if (value < m_min)
+        {
+            return m_min;
+        }
+        else if (value > m_max)
+        {
+            return m_max;
+        }
+        else
+        {
+            return value;
+        }
+    }
+
     static constexpr Interval<T> empty()
     {
         return s_empty;
