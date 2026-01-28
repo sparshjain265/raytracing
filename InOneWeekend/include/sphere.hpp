@@ -48,10 +48,10 @@ public:
 
         // Find the nearest root that lies in the acceptable range
         auto root = (h - sqrtD) / a;
-        if (!rayT.contains(root))
+        if (!rayT.surrounds(root))
         {
             root = (h + sqrtD) / a;
-            if (!rayT.contains(root))
+            if (!rayT.surrounds(root))
             {
                 return false;
             }

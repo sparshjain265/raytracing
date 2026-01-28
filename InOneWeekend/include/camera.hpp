@@ -39,6 +39,17 @@ public:
         m_numSamplesPerPixel = numSamplesPerPixel;
     }
 
+    void setMaxReflection(int maxReflection)
+    {
+        // Sets the maximum number of reflections a ray can undergo
+        // before being terminated
+        // Default is 10
+        // Higher values increase realism but also increase render time
+        // Very high values can lead to stack overflow due to deep recursion
+        // in rayColor()
+        m_maxReflection = maxReflection;
+    }
+
     void render(const Hittable<T> &world)
     {
         // Always initialize before rendering
@@ -72,6 +83,7 @@ private:
     T m_aspectRatio{1.0};
     int m_imageWidth{100};
     int m_numSamplesPerPixel{10};
+    int m_maxReflection{10};
 
     // Internally Used Camera Parameters
     int m_imageHeight{100};
@@ -128,18 +140,27 @@ private:
     Vector3<T> sampleSquare() const
     {
         // Returns the vector to a random point in the [-0.5, -0.5] x [+0.5, +0.5] square
-        return Vector3<T>(random<T>() - 0.5, random<T>() - 0.5, 0);
+        return Vector3<T>(Util::random<T>() - 0.5, Util::random<T>() - 0.5, 0);
     }
 
-    constexpr Color<T> rayColor(const Ray<T> &r, const Hittable<T> &world)
+    Color<T> rayColor(const Ray<T> &r, const Hittable<T> &world, int reflectionCount = 0) const
     {
+        constexpr auto black = Color<T>(0.0, 0.0, 0.0);
+        if (reflectionCount > m_maxReflection)
+        {
+            return black;
+        }
+
         HitRecord<T> record;
 
         if (world.hit(r, Interval<T>(static_cast<T>(0), infinity<T>), record))
         {
-            const auto N = record.normal();
-            constexpr auto ones = Color<T>(1.0, 1.0, 1.0);
-            return static_cast<T>(0.5) * (ones + N);
+            const auto direction = randomUnitVectorOnHemisphere<T>(record.normal());
+            const auto newRay = Ray<T>(record.point(), direction);
+            return static_cast<T>(0.5) * rayColor(newRay, world, reflectionCount + 1);
+            // const auto N = record.normal();
+            // constexpr auto ones = Color<T>(1.0, 1.0, 1.0);
+            // return static_cast<T>(0.5) * (ones + N);
         }
 
         const auto unitDirection = unitVector(r.direction());

@@ -12,6 +12,9 @@
 #include <iostream>
 #include <array>
 #include <concepts>
+#include <limits>
+
+#include "util.hpp"
 
 template <std::floating_point T = double>
 class Vector3
@@ -71,6 +74,16 @@ public:
     constexpr T squared_length() const
     {
         return squared_norm();
+    }
+
+    static constexpr Vector3 random()
+    {
+        return Vector3(Util::random<T>(), Util::random<T>(), Util::random<T>());
+    }
+
+    static constexpr Vector3 random(T min, T max)
+    {
+        return Vector3(Util::random<T>(min, max), Util::random<T>(min, max), Util::random<T>(min, max));
     }
 
 private:
@@ -155,6 +168,31 @@ template <std::floating_point T>
 inline constexpr Vector3<T> unitVector(const Vector3<T> &v)
 {
     return v / v.norm();
+}
+
+template <std::floating_point T>
+inline Vector3<T> randomUnitVector()
+{
+    while (true)
+    {
+        const auto p = Vector3<T>::random(-1.0, 1.0);
+        const T norm = p.squared_norm();
+        constexpr T threshold = 1e-30;
+        if (threshold < norm && norm <= 1.0)
+        {
+            return p / std::sqrt(norm);
+        }
+    }
+}
+
+template <std::floating_point T>
+inline Vector3<T> randomUnitVectorOnHemisphere(const Vector3<T> &normal)
+{
+    const Vector3<T> unit_vector = randomUnitVector<T>();
+    if (dot(unit_vector, normal) > 0.0) // In the same hemisphere as the normal
+        return unit_vector;
+    else
+        return -unit_vector;
 }
 
 #endif /* INONEWEEKEND_INCLUDE_VECTOR3_HPP */

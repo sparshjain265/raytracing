@@ -44,7 +44,7 @@ add_executable(RayTracerInOneWeekend ${SOURCE_ONE_WEEKEND})
 target_include_directories(RayTracerInOneWeekend PRIVATE InOneWeekend/include)
 
 # Compile Options
-set(COMMON_CXX_FLAGS -fdiagnostics-color=always -pedantic-errors -Wall -Wextra -Werror -Weffc++ -Wconversion -Wsign-conversion)
+set(COMMON_CXX_FLAGS -fdiagnostics-color=always -fdiagnostics-all-candidates -pedantic-errors -Wall -Wextra -Werror -Weffc++ -Wconversion -Wsign-conversion)
 set(DEBUG_CXX_FLAGS ${COMMON_CXX_FLAGS} -O0 -g -ggdb -DDEBUG -fno-omit-frame-pointer)
 set(RELEASE_CXX_FLAGS ${COMMON_CXX_FLAGS} -O3 -DNDEBUG -march=native)
 
