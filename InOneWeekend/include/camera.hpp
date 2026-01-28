@@ -155,7 +155,7 @@ private:
 
         if (world.hit(r, Interval<T>(static_cast<T>(std::numeric_limits<T>::epsilon()), infinity<T>), record))
         {
-            const auto direction = randomUnitVectorOnHemisphere<T>(record.normal());
+            const auto direction = record.normal() + randomUnitVector<T>();
             const auto newRay = Ray<T>(record.point(), direction);
             return static_cast<T>(0.5) * rayColor(newRay, world, reflectionCount + 1);
             // const auto N = record.normal();
