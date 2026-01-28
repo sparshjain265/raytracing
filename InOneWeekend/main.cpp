@@ -16,12 +16,13 @@
 #include "hittable.hpp"
 #include "hittable_list.hpp"
 #include "sphere.hpp"
+#include "interval.hpp"
 
 template <std::floating_point T = double>
 constexpr Color<T> rayColor(const Ray<T> &r, const Hittable<T> &world)
 {
     HitRecord<T> record;
-    if (world.hit(r, static_cast<T>(0), infinity<T>, record))
+    if (world.hit(r, Interval<T>(static_cast<T>(0), infinity<T>), record))
     {
         const auto N = record.normal();
         constexpr auto ones = Color<T>(1.0, 1.0, 1.0);

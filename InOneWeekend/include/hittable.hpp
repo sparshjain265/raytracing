@@ -10,6 +10,7 @@
 
 #include <concepts>
 #include "ray.hpp"
+#include "interval.hpp"
 
 template <std::floating_point T = double>
 class HitRecord
@@ -54,8 +55,7 @@ public:
     virtual ~Hittable() = default;
     virtual bool hit(
         const Ray<T> &r,
-        T t_min,
-        T t_max,
+        Interval<T> rayT,
         HitRecord<T> &record) const = 0;
 
 private:

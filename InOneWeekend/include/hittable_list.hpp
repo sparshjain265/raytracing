@@ -13,6 +13,7 @@
 #include <memory>
 
 #include "hittable.hpp"
+#include "interval.hpp"
 
 template <std::floating_point T = double>
 class HittableList : public Hittable<T>
@@ -38,17 +39,16 @@ public:
 
     virtual bool hit(
         const Ray<T> &r,
-        T t_min,
-        T t_max,
+        Interval<T> rayT,
         HitRecord<T> &record) const override
     {
         HitRecord<T> tempRecord;
         bool hitAnything = false;
-        T closestSoFar = t_max;
+        T closestSoFar = rayT.max();
 
         for (const auto &object : m_objects)
         {
-            if (object->hit(r, t_min, closestSoFar, tempRecord))
+            if (object->hit(r, Interval<T>(rayT.min(), closestSoFar), tempRecord))
             {
                 hitAnything = true;
                 closestSoFar = tempRecord.t();

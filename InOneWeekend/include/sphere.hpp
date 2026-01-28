@@ -8,9 +8,11 @@
 #ifndef INONEWEEKEND_INCLUDE_SPHERE_HPP
 #define INONEWEEKEND_INCLUDE_SPHERE_HPP
 
+#include <concepts>
+
 #include "hittable.hpp"
 #include "vector3.hpp"
-#include <concepts>
+#include "interval.hpp"
 
 template <std::floating_point T = double>
 class Sphere : public Hittable<T>
@@ -28,8 +30,7 @@ public:
 
     virtual bool hit(
         const Ray<T> &r,
-        T t_min,
-        T t_max,
+        Interval<T> rayT,
         HitRecord<T> &record) const override
     {
         const auto oc = m_center - r.origin();
@@ -47,10 +48,10 @@ public:
 
         // Find the nearest root that lies in the acceptable range
         auto root = (h - sqrtD) / a;
-        if (root < t_min || root > t_max)
+        if (!rayT.contains(root))
         {
             root = (h + sqrtD) / a;
-            if (root < t_min || root > t_max)
+            if (!rayT.contains(root))
             {
                 return false;
             }
