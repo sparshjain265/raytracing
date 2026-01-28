@@ -153,7 +153,7 @@ private:
 
         HitRecord<T> record;
 
-        if (world.hit(r, Interval<T>(static_cast<T>(0), infinity<T>), record))
+        if (world.hit(r, Interval<T>(static_cast<T>(std::numeric_limits<T>::epsilon()), infinity<T>), record))
         {
             const auto direction = randomUnitVectorOnHemisphere<T>(record.normal());
             const auto newRay = Ray<T>(record.point(), direction);
