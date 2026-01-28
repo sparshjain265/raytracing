@@ -7,52 +7,34 @@
 
 #include <iostream>
 #include <concepts>
+#include <memory>
+
 #include "color.hpp"
 #include "vector3.hpp"
 #include "ray.hpp"
+#include "util.hpp"
+#include "hittable.hpp"
+#include "hittable_list.hpp"
+#include "sphere.hpp"
 
 template <std::floating_point T = double>
-constexpr T hitSphere(
-    const Point3<T> &center,
-    T radius,
-    const Ray<T> &r)
+constexpr Color<T> rayColor(const Ray<T> &r, const Hittable<T> &world)
 {
-    const auto oc = center - r.origin();
-    const auto a = dot(r.direction(), r.direction());
-    const auto h = dot(r.direction(), oc);
-    const auto c = dot(oc, oc) - radius * radius;
-    const auto discriminant = h * h - a * c;
-
-    if (discriminant < 0)
+    HitRecord<T> record;
+    if (world.hit(r, static_cast<T>(0), infinity<T>, record))
     {
-        return static_cast<T>(-1.0);
-    }
-    else
-    {
-        return (h - std::sqrt(discriminant)) / a;
-    }
-}
-
-template <std::floating_point T = double>
-constexpr Color<T> rayColor(const Ray<T> &r)
-{
-    constexpr auto center = Point3<T>(0.0, 0.0, -1.0);
-    constexpr auto radius = static_cast<T>(0.5);
-    const auto t = hitSphere(center, radius, r);
-    if (t > 0)
-    {
-        const auto N = unitVector(r.at(t) - center);
+        const auto N = record.normal();
         constexpr auto ones = Color<T>(1.0, 1.0, 1.0);
         return static_cast<T>(0.5) * (ones + N);
     }
 
     const auto unitDirection = unitVector(r.direction());
-    const T a = static_cast<T>(0.5) * (unitDirection.y() + static_cast<T>(1.0));
+    const T t = static_cast<T>(0.5) * (unitDirection.y() + static_cast<T>(1.0));
 
     constexpr auto white = Color<T>(1.0, 1.0, 1.0);
     constexpr auto blue = Color<T>(0.5, 0.7, 1.0);
 
-    return (1 - a) * white + a * blue;
+    return (1 - t) * white + t * blue;
 }
 
 int main()
@@ -84,9 +66,15 @@ int main()
                                      (viewportHorizontal / 2.0) -
                                      (viewportVertical / 2.0);
 
-    // Pixel 00 Location
-    constexpr auto pixel00Location = viewportTopLeft +
-                                     0.5 * (pixelDeltaHorizontal + pixelDeltaVertical);
+    // Pixel 00 Center
+    constexpr auto pixel00Center = viewportTopLeft +
+                                   0.5 * (pixelDeltaHorizontal + pixelDeltaVertical);
+
+    // World Setup
+    HittableList<double> world;
+
+    world.add(std::make_shared<Sphere<double>>(Point3(0.0, 0.0, -1.0), 0.5));
+    world.add(std::make_shared<Sphere<double>>(Point3(0.0, -100.5, -1.0), 100.0));
 
     // Render
     std::cout << "P3\n"
@@ -97,13 +85,14 @@ int main()
         std::clog << "\rScanlines remaining: " << imageHeight - i << ' ' << std::flush;
         for (int j = 0; j < imageWidth; ++j)
         {
-            auto pixelLocation = pixel00Location +
-                                 i * pixelDeltaVertical +
-                                 j * pixelDeltaHorizontal;
+            auto pixelCenter = pixel00Center +
+                               i * pixelDeltaVertical +
+                               j * pixelDeltaHorizontal;
 
-            auto rayDirection = pixelLocation - cameraCenter;
-            auto ray = Ray(cameraCenter, rayDirection);
-            auto pixelColor = rayColor(ray);
+            auto rayDirection = pixelCenter - cameraCenter;
+            Ray ray(cameraCenter, rayDirection);
+
+            auto pixelColor = rayColor(ray, world);
             writeColor(std::cout, pixelColor);
         }
     }

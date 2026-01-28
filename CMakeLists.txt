@@ -26,6 +26,9 @@ set(SOURCE_ONE_WEEKEND
     InOneWeekend/src/vector3.cpp
     InOneWeekend/src/color.cpp
     InOneWeekend/src/ray.cpp
+    InOneWeekend/src/hittable.cpp
+    InOneWeekend/src/hittable_list.cpp
+    InOneWeekend/src/sphere.cpp
 )
 
 # Include Directories
