@@ -8,8 +8,10 @@
 #ifndef INONEWEEKEND_INCLUDE_CAMERA_HPP
 #define INONEWEEKEND_INCLUDE_CAMERA_HPP
 
+#include <chrono>
 #include <cmath>
 #include <concepts>
+#include <iomanip>
 
 #include "hittable.hpp"
 #include "color.hpp"
@@ -114,9 +116,12 @@ public:
         std::cout << "P3\n"
                   << m_imageWidth << ' ' << m_imageHeight << "\n255\n";
 
+        const auto startTime = std::chrono::steady_clock::now();
+
+        std::clog << "Rendering..." << std::flush;
+
         for (int i = 0; i < m_imageHeight; ++i)
         {
-            std::clog << "\rScanlines remaining: " << (m_imageHeight - i) << ' ' << std::flush;
             for (int j = 0; j < m_imageWidth; ++j)
             {
                 Color<T> pixelColor(0.0, 0.0, 0.0);
@@ -129,9 +134,39 @@ public:
 
                 writeColor(std::cout, pixelColor);
             }
+
+            // Log progress after each scanline
+            const int linesDone = i + 1;
+            const auto now = std::chrono::steady_clock::now();
+            const auto elapsed = std::chrono::duration<double>(now - startTime).count();
+            const double avgTimePerLine = elapsed / linesDone;
+            const int linesRemaining = m_imageHeight - linesDone;
+            const double etaSeconds = avgTimePerLine * linesRemaining;
+
+            const int etaH = static_cast<int>(etaSeconds) / 3600;
+            const int etaM = (static_cast<int>(etaSeconds) % 3600) / 60;
+            const int etaS = static_cast<int>(etaSeconds) % 60;
+
+            std::clog << "\rRendering... Progress: " << linesDone << "/" << m_imageHeight
+                      << " | ETA: " << std::setfill('0')
+                      << std::setw(2) << etaH << ":"
+                      << std::setw(2) << etaM << ":"
+                      << std::setw(2) << etaS
+                      << "    " << std::flush;
         }
 
-        std::clog << "\rDone.                                              \n";
+        const auto endTime = std::chrono::steady_clock::now();
+        const auto totalSeconds = std::chrono::duration<double>(endTime - startTime).count();
+        const int totalH = static_cast<int>(totalSeconds) / 3600;
+        const int totalM = (static_cast<int>(totalSeconds) % 3600) / 60;
+        const int totalS = static_cast<int>(totalSeconds) % 60;
+
+        std::clog << "\rDone. Total time: "
+                  << std::setfill('0')
+                  << std::setw(2) << totalH << ":"
+                  << std::setw(2) << totalM << ":"
+                  << std::setw(2) << totalS
+                  << "                    \n";
     }
 
 private:
