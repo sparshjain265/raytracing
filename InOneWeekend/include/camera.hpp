@@ -23,6 +23,12 @@ public:
     constexpr T aspectRatio() const { return m_aspectRatio; }
     constexpr int imageWidth() const { return m_imageWidth; }
     constexpr int numSamplesPerPixel() const { return m_numSamplesPerPixel; }
+    constexpr int maxReflection() const { return m_maxReflection; }
+    constexpr T verticalFOV() const { return m_verticalFOV; }
+    constexpr T verticalFOV_deg() const
+    {
+        return Util::radiansToDegrees<T>(m_verticalFOV);
+    }
 
     void setAspectRatio(T aspectRatio)
     {
@@ -48,6 +54,16 @@ public:
         // Very high values can lead to stack overflow due to deep recursion
         // in rayColor()
         m_maxReflection = maxReflection;
+    }
+
+    void setVerticalFOV(T verticalFOV)
+    {
+        m_verticalFOV = verticalFOV;
+    }
+
+    void setVerticalFOV_deg(T verticalFOV_deg)
+    {
+        m_verticalFOV = Util::degreesToRadians<T>(verticalFOV_deg);
     }
 
     void render(const Hittable<T> &world)
@@ -84,6 +100,7 @@ private:
     int m_imageWidth{100};
     int m_numSamplesPerPixel{10};
     int m_maxReflection{10};
+    T m_verticalFOV{Util::degreesToRadians<T>(90.0)};
 
     // Internally Used Camera Parameters
     int m_imageHeight{100};
@@ -104,7 +121,8 @@ private:
 
         // Viewport Setup
         const T focalLength = 1.0;
-        const T viewportHeight = 2.0;
+        const T halfHeight = std::tan(m_verticalFOV / 2);
+        const T viewportHeight = 2 * halfHeight * focalLength;
         const T viewportWidth = viewportHeight * (static_cast<T>(m_imageWidth) / m_imageHeight);
 
         const auto viewportHorizontal = Vector3<T>(viewportWidth, 0.0, 0.0);

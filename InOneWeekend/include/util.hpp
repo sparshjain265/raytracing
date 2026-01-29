@@ -30,6 +30,12 @@ namespace Util
     }
 
     template <std::floating_point T = double>
+    inline constexpr T radiansToDegrees(T radians)
+    {
+        return radians * (static_cast<T>(180.0) / pi<T>);
+    }
+
+    template <std::floating_point T = double>
     inline T random()
     {
         using _type = std::uint64_t;
