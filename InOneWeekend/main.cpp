@@ -44,7 +44,11 @@ int main()
     camera.setImageWidth(400);
     camera.setNumSamplesPerPixel(100);
     camera.setMaxReflection(100);
-    camera.setVerticalFOV_deg(45);
+
+    camera.setVerticalFOV_deg(90);
+    camera.setLookFrom(Point3<T>(-2, 2, 1));
+    camera.setLookAt(Point3<T>(0, 0, -1));
+    camera.setVUp(Vector3<T>(0, 1, 0));
 
     camera.render(world);
 

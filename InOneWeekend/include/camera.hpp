@@ -29,6 +29,9 @@ public:
     {
         return Util::radiansToDegrees<T>(m_verticalFOV);
     }
+    constexpr Point3<T> lookFrom() const { return m_lookFrom; }
+    constexpr Point3<T> lookAt() const { return m_lookAt; }
+    constexpr Vector3<T> vUp() const { return m_vUp; }
 
     void setAspectRatio(T aspectRatio)
     {
@@ -66,6 +69,21 @@ public:
         m_verticalFOV = Util::degreesToRadians<T>(verticalFOV_deg);
     }
 
+    void setLookFrom(const Point3<T> &lookFrom)
+    {
+        m_lookFrom = lookFrom;
+    }
+
+    void setLookAt(const Point3<T> &lookAt)
+    {
+        m_lookAt = lookAt;
+    }
+
+    void setVUp(const Vector3<T> &vUp)
+    {
+        m_vUp = vUp;
+    }
+
     void render(const Hittable<T> &world)
     {
         // Always initialize before rendering
@@ -96,43 +114,52 @@ public:
 
 private:
     // Publically Accessible Camera Parameters
-    T m_aspectRatio{1.0};
-    int m_imageWidth{100};
-    int m_numSamplesPerPixel{10};
-    int m_maxReflection{10};
-    T m_verticalFOV{Util::degreesToRadians<T>(90.0)};
+    T m_aspectRatio{1.0};                             // Ratio of Image Width over Height
+    int m_imageWidth{100};                            // Image Width in px
+    int m_numSamplesPerPixel{10};                     // Count of random samples per pixel
+    int m_maxReflection{10};                          // Maximum number of ray reflections per scene
+    T m_verticalFOV{Util::degreesToRadians<T>(90.0)}; // Vertical FoV
+    Point3<T> m_lookFrom{0, 0, 0};                    // Point Camera is lookin from
+    Point3<T> m_lookAt{0, 0, 0};                      // Point Camera is looking at
+    Vector3<T> m_vUp{0, 1, 0};                        // Camera-Relative "up" direction
 
     // Internally Used Camera Parameters
-    int m_imageHeight{100};
-    Point3<T> m_center{};
-    Point3<T> m_pixel00Center{};
-    Vector3<T> m_pixelDeltaHorizontal{};
-    Vector3<T> m_pixelDeltaVertical{};
-    T m_pixelSampleScale{0.1};
+    int m_imageHeight{100};              // Rendered Image Height
+    Point3<T> m_center{};                // Camera Center
+    Point3<T> m_pixel00Center{};         // Center of Pixel 0, 0
+    Vector3<T> m_pixelDeltaHorizontal{}; // Offset of pixel to the right
+    Vector3<T> m_pixelDeltaVertical{};   // Offset of pixel below
+    T m_pixelSampleScale{0.1};           // Color scale factor for a sum of pixel samples
+    Vector3<T> m_u{}, m_v{}, m_w{};      // Camera Frame basis vectors
 
     void initialize()
     {
         m_imageHeight = static_cast<int>(m_imageWidth / m_aspectRatio);
         m_imageHeight = (m_imageHeight < 1) ? 1 : m_imageHeight;
 
-        m_center = Point3<T>(0.0, 0.0, 0.0);
+        m_center = m_lookFrom;
 
         m_pixelSampleScale = static_cast<T>(1.0) / m_numSamplesPerPixel;
 
         // Viewport Setup
-        const T focalLength = 1.0;
+        const T focalLength = (m_lookAt - m_lookFrom).norm();
         const T halfHeight = std::tan(m_verticalFOV / 2);
         const T viewportHeight = 2 * halfHeight * focalLength;
         const T viewportWidth = viewportHeight * (static_cast<T>(m_imageWidth) / m_imageHeight);
 
-        const auto viewportHorizontal = Vector3<T>(viewportWidth, 0.0, 0.0);
-        const auto viewportVertical = Vector3<T>(0.0, -viewportHeight, 0.0);
+        // Calculate the u, v, w unit basis vectors for the camera frame
+        m_w = unitVector(m_lookFrom - m_lookAt);
+        m_u = unitVector(cross(m_vUp, m_w));
+        m_v = cross(m_w, m_u);
+
+        const auto viewportHorizontal = viewportWidth * m_u;
+        const auto viewportVertical = viewportHeight * (-m_v);
 
         m_pixelDeltaHorizontal = viewportHorizontal / m_imageWidth;
         m_pixelDeltaVertical = viewportVertical / m_imageHeight;
 
         const auto viewportTopLeft = m_center -
-                                     Vector3<T>(0.0, 0.0, focalLength) -
+                                     (focalLength * m_w) -
                                      (viewportHorizontal / 2) -
                                      (viewportVertical / 2);
 
