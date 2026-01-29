@@ -9,6 +9,7 @@
 #define INONEWEEKEND_INCLUDE_MATERIAL_HPP
 
 #include <concepts>
+#include <cmath>
 
 #include "hittable.hpp"
 #include "ray.hpp"
@@ -83,6 +84,56 @@ public:
 private:
     Color<T> m_albedo;
     T m_fuzz;
+};
+
+template <std::floating_point T = double>
+class Dielectric : public Material<T>
+{
+public:
+    constexpr Dielectric(T refractiveIndex) : m_refractiveIndex(refractiveIndex) {}
+
+    virtual ~Dielectric() override = default;
+
+    virtual bool scatter(
+        const Ray<T> &rIn,
+        const HitRecord<T> &record,
+        Color<T> &attenuation,
+        Ray<T> &scattered) const override
+    {
+        attenuation = Color<T>(1.0, 1.0, 1.0);
+        const T etaIOverEtaT = record.frontFace() ? (static_cast<T>(1.0) / m_refractiveIndex) : m_refractiveIndex;
+
+        const auto unitDirection = unitVector(rIn.direction());
+
+        const T cosTheta = std::fmin(dot(-unitDirection, record.normal()), static_cast<T>(1.0));
+        const T sinTheta = std::sqrt(static_cast<T>(1.0) - cosTheta * cosTheta);
+
+        bool cannotRefract = (etaIOverEtaT * sinTheta) > static_cast<T>(1.0);
+        Vector3<T> direction;
+
+        if (cannotRefract || reflectance(cosTheta, etaIOverEtaT) > Util::random<T>())
+        {
+            direction = reflect(unitDirection, record.normal());
+        }
+        else
+        {
+            direction = refract(unitDirection, record.normal(), etaIOverEtaT);
+        }
+
+        scattered = Ray<T>(record.point(), direction);
+        return true;
+    }
+
+private:
+    T m_refractiveIndex;
+
+    static T reflectance(T cosine, T refractionIndex)
+    {
+        // Use Schlick's approximation for reflectance
+        T r0 = (static_cast<T>(1.0) - refractionIndex) / (static_cast<T>(1.0) + refractionIndex);
+        r0 = r0 * r0;
+        return r0 + (static_cast<T>(1.0) - r0) * std::pow((static_cast<T>(1.0) - cosine), 5);
+    }
 };
 
 #endif /* INONEWEEKEND_INCLUDE_MATERIAL_HPP */

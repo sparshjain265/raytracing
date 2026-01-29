@@ -29,12 +29,14 @@ int main()
 
     auto groundMaterial = std::make_shared<Lambertial<T>>(Color<T>(0.8, 0.8, 0.0));
     auto centerMaterial = std::make_shared<Lambertial<T>>(Color<T>(0.1, 0.2, 0.5));
-    auto leftMaterial = std::make_shared<Metal<T>>(Color<T>(0.8, 0.8, 0.8), 0.3);
+    auto leftMaterial = std::make_shared<Dielectric<T>>(1.50);
+    auto bubbleMaterial = std::make_shared<Dielectric<T>>(1.00 / 1.50);
     auto rightMaterial = std::make_shared<Metal<T>>(Color<T>(0.8, 0.6, 0.2), 1.0);
 
     world.add(std::make_shared<Sphere<T>>(Point3<T>(0.0, -100.5, -1.0), 100.0, groundMaterial));
     world.add(std::make_shared<Sphere<T>>(Point3<T>(0.0, 0.0, -1.2), 0.5, centerMaterial));
     world.add(std::make_shared<Sphere<T>>(Point3<T>(-1.0, 0.0, -1.0), 0.5, leftMaterial));
+    world.add(std::make_shared<Sphere<T>>(Point3<T>(-1.0, 0.0, -1.0), 0.4, bubbleMaterial));
     world.add(std::make_shared<Sphere<T>>(Point3<T>(1.0, 0.0, -1.0), 0.5, rightMaterial));
 
     Camera<T> camera;

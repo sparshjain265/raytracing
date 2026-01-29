@@ -13,6 +13,7 @@
 #include <array>
 #include <concepts>
 #include <limits>
+#include <cmath>
 
 #include "util.hpp"
 
@@ -221,6 +222,15 @@ template <std::floating_point T>
 inline Vector3<T> reflect(const Vector3<T> &v, const Vector3<T> &n)
 {
     return v - 2 * dot(v, n) * n;
+}
+
+template <std::floating_point T>
+inline Vector3<T> refract(const Vector3<T> &v, const Vector3<T> &n, T etaIOverEtaT)
+{
+    const T cosTheta = std::fmin(dot(-v, n), static_cast<T>(1.0));
+    const Vector3<T> rOutPerp = etaIOverEtaT * (v + cosTheta * n);
+    const Vector3<T> rOutParallel = -std::sqrt(std::abs(static_cast<T>(1.0) - rOutPerp.squaredNorm())) * n;
+    return rOutPerp + rOutParallel;
 }
 
 #endif /* INONEWEEKEND_INCLUDE_VECTOR3_HPP */
