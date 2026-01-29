@@ -50,6 +50,9 @@ int main()
     camera.setLookAt(Point3<T>(0, 0, -1));
     camera.setVUp(Vector3<T>(0, 1, 0));
 
+    camera.setDefocusAngle_deg(10);
+    camera.setFocusDist(3.4);
+
     camera.render(world);
 
     return 0;

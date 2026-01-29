@@ -209,6 +209,19 @@ inline Vector3<T> randomUnitVector()
 }
 
 template <std::floating_point T>
+inline Vector3<T> randomInUnitDisk()
+{
+    while (true)
+    {
+        const auto p = Vector3<T>(Util::random<T>(-1, 1), Util::random<T>(-1, 1), 0);
+        if (p.squaredNorm() < 1)
+        {
+            return p;
+        }
+    }
+}
+
+template <std::floating_point T>
 inline Vector3<T> randomUnitVectorOnHemisphere(const Vector3<T> &normal)
 {
     const Vector3<T> unit_vector = randomUnitVector<T>();

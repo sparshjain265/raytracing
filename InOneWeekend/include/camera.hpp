@@ -8,6 +8,7 @@
 #ifndef INONEWEEKEND_INCLUDE_CAMERA_HPP
 #define INONEWEEKEND_INCLUDE_CAMERA_HPP
 
+#include <cmath>
 #include <concepts>
 
 #include "hittable.hpp"
@@ -32,6 +33,12 @@ public:
     constexpr Point3<T> lookFrom() const { return m_lookFrom; }
     constexpr Point3<T> lookAt() const { return m_lookAt; }
     constexpr Vector3<T> vUp() const { return m_vUp; }
+    constexpr T defocusAngle() const { return m_defocusAngle; }
+    constexpr T defocusAngle_deg() const
+    {
+        return Util::radiansToDegrees<T>(m_defocusAngle);
+    }
+    constexpr T focusDist() const { return m_focusDist; }
 
     void setAspectRatio(T aspectRatio)
     {
@@ -84,6 +91,21 @@ public:
         m_vUp = vUp;
     }
 
+    void setDefocusAngle(T defocusAngle)
+    {
+        m_defocusAngle = defocusAngle;
+    }
+
+    void setDefocusAngle_deg(T defocusAngle_deg)
+    {
+        m_defocusAngle = Util::degreesToRadians<T>(defocusAngle_deg);
+    }
+
+    void setFocusDist(T focusDist)
+    {
+        m_focusDist = focusDist;
+    }
+
     void render(const Hittable<T> &world)
     {
         // Always initialize before rendering
@@ -114,16 +136,22 @@ public:
 
 private:
     // Publically Accessible Camera Parameters
-    T m_aspectRatio{1.0};                             // Ratio of Image Width over Height
-    int m_imageWidth{100};                            // Image Width in px
-    int m_numSamplesPerPixel{10};                     // Count of random samples per pixel
-    int m_maxReflection{10};                          // Maximum number of ray reflections per scene
+
+    T m_aspectRatio{1.0};         // Ratio of Image Width over Height
+    int m_imageWidth{100};        // Image Width in px
+    int m_numSamplesPerPixel{10}; // Count of random samples per pixel
+    int m_maxReflection{10};      // Maximum number of ray reflections per scene
+
     T m_verticalFOV{Util::degreesToRadians<T>(90.0)}; // Vertical FoV
     Point3<T> m_lookFrom{0, 0, 0};                    // Point Camera is lookin from
     Point3<T> m_lookAt{0, 0, 0};                      // Point Camera is looking at
     Vector3<T> m_vUp{0, 1, 0};                        // Camera-Relative "up" direction
 
+    T m_defocusAngle{0.0}; // Variation angle of rays through each pixel
+    T m_focusDist{0.0};    // Distance from camera lookFrom point to plane of perfect focus
+
     // Internally Used Camera Parameters
+
     int m_imageHeight{100};              // Rendered Image Height
     Point3<T> m_center{};                // Camera Center
     Point3<T> m_pixel00Center{};         // Center of Pixel 0, 0
@@ -131,6 +159,8 @@ private:
     Vector3<T> m_pixelDeltaVertical{};   // Offset of pixel below
     T m_pixelSampleScale{0.1};           // Color scale factor for a sum of pixel samples
     Vector3<T> m_u{}, m_v{}, m_w{};      // Camera Frame basis vectors
+    Vector3<T> m_defocusDiskU{};         // Defocus disk horizontal radius
+    Vector3<T> m_defocusDiskV{};         // Defocus disk vertical radius
 
     void initialize()
     {
@@ -142,9 +172,8 @@ private:
         m_pixelSampleScale = static_cast<T>(1.0) / m_numSamplesPerPixel;
 
         // Viewport Setup
-        const T focalLength = (m_lookAt - m_lookFrom).norm();
         const T halfHeight = std::tan(m_verticalFOV / 2);
-        const T viewportHeight = 2 * halfHeight * focalLength;
+        const T viewportHeight = 2 * halfHeight * m_focusDist;
         const T viewportWidth = viewportHeight * (static_cast<T>(m_imageWidth) / m_imageHeight);
 
         // Calculate the u, v, w unit basis vectors for the camera frame
@@ -159,16 +188,21 @@ private:
         m_pixelDeltaVertical = viewportVertical / m_imageHeight;
 
         const auto viewportTopLeft = m_center -
-                                     (focalLength * m_w) -
+                                     (m_focusDist * m_w) -
                                      (viewportHorizontal / 2) -
                                      (viewportVertical / 2);
 
         m_pixel00Center = viewportTopLeft + 0.5 * (m_pixelDeltaHorizontal + m_pixelDeltaVertical);
+
+        // Calculate the camera defocus disk basis vectors
+        const auto defocusRadius = m_focusDist * std::tan(m_defocusAngle / 2);
+        m_defocusDiskU = m_u * defocusRadius;
+        m_defocusDiskV = m_v * defocusRadius;
     }
 
     Ray<T> getRay(int i, int j) const
     {
-        // Construct a camera ray originating from the origin and directed at a
+        // Construct a camera ray originating from the origin (defocus disk) and directed at a
         // randomly sampled point around the pixel (i, j).
 
         const auto offset = sampleSquare();
@@ -176,7 +210,7 @@ private:
                                  ((i + offset.y()) * m_pixelDeltaVertical) +
                                  ((j + offset.x()) * m_pixelDeltaHorizontal);
 
-        const auto rayOrigin = m_center;
+        const auto rayOrigin = (m_defocusAngle <= 0) ? m_center : sampleDefocusDisk();
         const auto rayDirection = pixelSample - rayOrigin;
 
         return Ray<T>(rayOrigin, rayDirection);
@@ -186,6 +220,12 @@ private:
     {
         // Returns the vector to a random point in the [-0.5, -0.5] x [+0.5, +0.5] square
         return Vector3<T>(Util::random<T>() - 0.5, Util::random<T>() - 0.5, 0);
+    }
+
+    Point3<T> sampleDefocusDisk() const
+    {
+        const auto p = randomInUnitDisk<T>();
+        return m_center + (p.x() * m_defocusDiskU) + (p.y() * m_defocusDiskV);
     }
 
     Color<T> rayColor(const Ray<T> &r, const Hittable<T> &world, int reflectionCount = 0) const
