@@ -26,9 +26,9 @@ namespace Random
         return std::mt19937{ss};
     }
 
-    // Here's our global std::mt19937 object.
-    // The inline keyword means we only have one global instance for our whole program.
-    inline std::mt19937 mt{generate()}; // generates a seeded std::mt19937 and copies it into our global object
+    // Thread-local std::mt19937 object.
+    // Each thread gets its own independently seeded RNG for thread safety.
+    inline thread_local std::mt19937 mt{generate()};
 
     // Generate a random int between [min, max] (inclusive)
     // * also handles cases where the two arguments have different types but can be converted to int

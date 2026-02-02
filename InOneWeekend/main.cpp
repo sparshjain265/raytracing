@@ -82,7 +82,7 @@ int main()
 
     Camera<T> camera;
     camera.setAspectRatio(16.0 / 9.0);
-    camera.setImageWidth(320); // Increase this for higher resolution image
+    camera.setImageWidth(1280); // Increase this for higher resolution image
     camera.setNumSamplesPerPixel(500);
     camera.setMaxReflection(100);
 

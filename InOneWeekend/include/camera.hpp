@@ -8,10 +8,13 @@
 #ifndef INONEWEEKEND_INCLUDE_CAMERA_HPP
 #define INONEWEEKEND_INCLUDE_CAMERA_HPP
 
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <concepts>
 #include <iomanip>
+#include <thread>
+#include <vector>
 
 #include "hittable.hpp"
 #include "color.hpp"
@@ -113,30 +116,57 @@ public:
         // Always initialize before rendering
         initialize();
 
-        std::cout << "P3\n"
-                  << m_imageWidth << ' ' << m_imageHeight << "\n255\n";
+        // Allocate pixel buffer (row-major: buffer[row][col])
+        std::vector<std::vector<Color<T>>> pixelBuffer(
+            static_cast<size_t>(m_imageHeight), std::vector<Color<T>>(static_cast<size_t>(m_imageWidth)));
 
         const auto startTime = std::chrono::steady_clock::now();
+        std::atomic<int> linesCompleted{0};
 
-        std::clog << "Rendering..." << std::flush;
+        // Determine number of threads
+        const int numThreads = static_cast<int>(std::thread::hardware_concurrency());
+        std::vector<std::thread> threads;
 
-        for (int i = 0; i < m_imageHeight; ++i)
+        std::clog << "Rendering with " << numThreads << " threads..." << std::flush;
+
+        // Worker function: each thread processes a range of scanlines
+        auto renderWorker = [&](size_t startRow, size_t endRow)
         {
-            for (int j = 0; j < m_imageWidth; ++j)
+            for (size_t i = startRow; i < endRow; ++i)
             {
-                Color<T> pixelColor(0.0, 0.0, 0.0);
-                for (int s = 0; s < m_numSamplesPerPixel; ++s)
+                for (size_t j = 0; j < static_cast<size_t>(m_imageWidth); ++j)
                 {
-                    const auto ray = getRay(i, j);
-                    pixelColor += rayColor(ray, world);
+                    Color<T> pixelColor(0.0, 0.0, 0.0);
+                    for (int s = 0; s < m_numSamplesPerPixel; ++s)
+                    {
+                        const auto ray = getRay(static_cast<int>(i), static_cast<int>(j));
+                        pixelColor += rayColor(ray, world);
+                    }
+                    pixelColor *= m_pixelSampleScale;
+                    pixelBuffer[i][j] = pixelColor;
                 }
-                pixelColor *= m_pixelSampleScale;
-
-                writeColor(std::cout, pixelColor);
+                linesCompleted.fetch_add(1, std::memory_order_relaxed);
             }
+        };
 
-            // Log progress after each scanline
-            const int linesDone = i + 1;
+        // Launch worker threads
+        const int rowsPerThread = m_imageHeight / numThreads;
+        for (int t = 0; t < numThreads; ++t)
+        {
+            int startRow = t * rowsPerThread;
+            int endRow = (t == numThreads - 1) ? m_imageHeight : startRow + rowsPerThread;
+            threads.emplace_back(renderWorker, startRow, endRow);
+        }
+
+        // Progress reporting in main thread
+        while (linesCompleted.load(std::memory_order_relaxed) < m_imageHeight)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+            const int linesDone = linesCompleted.load(std::memory_order_relaxed);
+            if (linesDone == 0)
+                continue;
+
             const auto now = std::chrono::steady_clock::now();
             const auto elapsed = std::chrono::duration<double>(now - startTime).count();
             const double avgTimePerLine = elapsed / linesDone;
@@ -147,12 +177,20 @@ public:
             const int etaM = (static_cast<int>(etaSeconds) % 3600) / 60;
             const int etaS = static_cast<int>(etaSeconds) % 60;
 
-            std::clog << "\rRendering... Progress: " << linesDone << "/" << m_imageHeight
+            std::clog << "\rRendering with "
+                      << numThreads << " threads... "
+                      << "Progress: " << linesDone << "/" << m_imageHeight
                       << " | ETA: " << std::setfill('0')
                       << std::setw(2) << etaH << ":"
                       << std::setw(2) << etaM << ":"
                       << std::setw(2) << etaS
                       << "    " << std::flush;
+        }
+
+        // Wait for all threads to complete
+        for (auto &thread : threads)
+        {
+            thread.join();
         }
 
         const auto endTime = std::chrono::steady_clock::now();
@@ -166,7 +204,19 @@ public:
                   << std::setw(2) << totalH << ":"
                   << std::setw(2) << totalM << ":"
                   << std::setw(2) << totalS
-                  << "                    \n";
+                  << "                                                      \n";
+
+        // Write PPM header and pixel buffer to stdout
+        std::cout << "P3\n"
+                  << m_imageWidth << ' ' << m_imageHeight << "\n255\n";
+
+        for (int i = 0; i < m_imageHeight; ++i)
+        {
+            for (int j = 0; j < m_imageWidth; ++j)
+            {
+                writeColor(std::cout, pixelBuffer[static_cast<size_t>(i)][static_cast<size_t>(j)]);
+            }
+        }
     }
 
 private:

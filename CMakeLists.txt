@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.10)
 
 project(RayTracer LANGUAGES CXX)
 
+find_package(Threads REQUIRED)
+
 # Specify C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -54,6 +56,9 @@ target_compile_options(RayTracerInOneWeekend PRIVATE
     $<$<CONFIG:Release>:${RELEASE_CXX_FLAGS}>
     $<$<CONFIG:Debug>:${DEBUG_CXX_FLAGS}>
 )
+
+# Link Libraries
+target_link_libraries(RayTracerInOneWeekend PRIVATE Threads::Threads)
 
 # Set Target Properties
 set_target_properties(RayTracerInOneWeekend PROPERTIES

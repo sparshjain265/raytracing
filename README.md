@@ -9,5 +9,5 @@ We support two configs, Debug and Release, defaulting to Debug if unspecified.
 ```bash
 $ cmake -B build/<config> -DCMAKE_BUILD_TYPE=<config>
 $ cmake --build build/<config>
-$ ./bin/<config>/RayTracerInOneWeekend
+$ ./bin/<config>/RayTracerInOneWeekend > /path/to/result/image.ppm
 ```
